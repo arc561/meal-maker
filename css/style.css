@@ -1,0 +1,84 @@
+
+body,
+html {
+	margin:0;
+	padding:0;
+	padding-top: 0px;
+	color:#000;
+	background:#a7a09a;
+	background: url('../img/tablecloth.jpg') repeat 0 0;
+}
+#content {
+	width:750px;
+	margin:0 auto;
+	background:#ddd;
+	opacity: 0.9;
+	box-shadow: 0px 5px 15px #333;
+}
+#header {
+	margin-top: 10px;
+	padding:20px 20px;
+	background:#ddd;
+	border-bottom-style: dashed;
+	border-width: 1px;
+}
+h1 {
+    margin:0;
+    font-size: 48px;
+    text-align: center;
+}
+#nav {
+	padding:5px 10px;
+	background:#bbb;
+}
+#nav ul {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+#nav li {
+	display:inline;
+	margin:0;
+	padding:0;
+}
+#fridge {
+	float:left;
+	width:330px;
+	padding:20px;
+}
+#fridge li {
+	width: 100%;
+}
+.expiry{
+	font-size: 9px;
+	font-weight: bold;
+	padding-top: 6px;
+	float: right;
+	background:#9c9;
+}
+h2 {
+	margin:0 0 1em;
+	text-align: center;
+}
+#recipes {
+	float:right;
+	width:330px;
+	padding:20px;
+	border-left-style: dashed;
+	border-width: 1px;
+}
+#footer {
+	clear:both;
+	text-align: center;
+	padding:15px 10px;
+	background: #ddd;
+	border-top-style: dashed;
+	border-width: 1px;
+}
+#footer p {
+	margin:0;
+}
+* html #footer {
+	height:1px;
+}
+	
