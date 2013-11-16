@@ -39,16 +39,20 @@ recipeObj = {
 		 **/
 		var content = "";
 		content += "<ul>";
-		recipeJSON.forEach(function(item){
-			content += "<li>";
-			content += "<h3>" + item.name + "</h3>";
-			content += "<ul>";
-			item.ingredients.forEach(function(ingredient) {
-				content += "<li>" + ingredient + "</li>";
+		if (recipeJSON.length === 0) {
+			content += "Order Takeout"
+		} else {
+			recipeJSON.forEach(function(item){
+				content += "<li>";
+				content += "<h3>" + item.name + "</h3>";
+				content += "<ul>";
+				item.ingredients.forEach(function(ingredient) {
+					content += "<li>" + ingredient + "</li>";
+				});
+				content += "</ul>";
+				content += "</li>";
 			});
-			content += "</ul>";
-			content += "</li>";
-		});
+		}
 		content += "</ul>";
 		this.recipeDiv.append(content);
 	},

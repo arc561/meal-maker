@@ -73,9 +73,9 @@ class FoodItem(object):
 		self.expiry = date
 	def __str__(self):
 		if self.expiry:
-			return "{} {} of {}, expires {}".format(self.amount, self.type, self.name, self.expiry)
+			return "{} {} {}, expires {}".format(self.amount, self.type, self.name, self.expiry)
 		else:
-			return "{} {} of {}".format(self.amount, self.type, self.name)
+			return "{} {} {}".format(self.amount, self.type, self.name)
 
 class FoodList(object):
 	"""
@@ -163,8 +163,8 @@ class RecipeBuilder(object):
 		self.fridge = FoodList()
 		# list of RecipeItems...
 		self.recipes = []
-		# calculated recipe
-		self.todays = RecipeItem()
+		# calculated RecipeItem()
+		self.todays = None
 
 	def build_all(self, fridge_file, recipe_file):
 		""" 
@@ -209,11 +209,19 @@ class RecipeBuilder(object):
 				return "{} days left".format(time)
 		try:
 			output = {}
-			output['fridge'] = [{
+			# grab the pretty string for the fridge items...
+			if not self.fridge:
+				output['fridge'] = []
+			else:
+				output['fridge'] = [{
 								'ingredient':item_string(item), 
 								'expiry':expiry_string(item.expiry)
 								} for item in self.fridge]
-			output['recipes'] = [{
+			# grab the pretty string for the recipes...
+			if not self.todays:
+				output['recipes'] = []
+			else:
+				output['recipes'] = [{
 								'name':self.todays.name, 
 								'ingredients': [item_string(item) for item in self.todays.ingredients] 
 								}]
