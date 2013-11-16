@@ -1,11 +1,17 @@
-Meal maker
-===========
+Meal Maker
+==========
 
 This is a Python program that calculates which meals to make based
 on a set of recipes and a list of current available food. A recipe 
 is chosen to be optimal if the food is available and the recipe uses
 the food closest to the expiry date. If no food meets the criteria,
 nothing is returned...
+
+Running
+-------
+To run the application, simply specify the csv and json file at the command line:
+
+> python run.py --fridge test/default/fridge.csv --recipes test/default/recipe.json
 
 fridge.py
 ---------
