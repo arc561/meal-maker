@@ -94,9 +94,10 @@ def main():
 		# grab today's recipe...
 		recipe = rb.todays
 		if recipe:
-			print "Optimal recipe is: {}".format(recipe.name)
+			print "Optimal recipe is:"
+			print recipe.name
 		else:
-			print "No recipe available. Buy more food."
+			print "Order Takeout"
 
 if __name__ == "__main__":
 	"""
