@@ -13,6 +13,15 @@ To run the application, simply specify the csv and json file at the command line
 
 > python run.py --fridge test/default/fridge.csv --recipes test/default/recipe.json
 
+The application can also be run with a simple web display. In this case the Python
+code will launch a SimpleHTTPServer and the recipes and fridge contents can be viewed
+through a browser.
+
+> python run.py --fridge test/default/fridge.csv --recipes test/default/recipe.json --host localhost --port 8000
+
+The above will serve the html page over localhost. Opening localhost:8000 in the browser
+will show the current recipe selection.
+
 fridge.py
 ---------
 
@@ -26,7 +35,7 @@ Brief list of the classes:
 * FoodType: 		-- Enum type for food items, describes the units
 * FoodItem: 		-- Data structure for a food item. Contains amount, type, unit and expiry
 * FoodList: 		-- List of food items and useful functions
-* RecipeItem: 	-- Structure for recipes, contains a name and a FoodList
+* RecipeItem: 		-- Structure for recipes, contains a name and a FoodList
 * RecipeBuilder:	-- Contains current fridge and recipes, and functions to sort and search 
 
 File structures:

@@ -174,9 +174,53 @@ class RecipeBuilder(object):
 		"""
 		# load fridge...
 		self.build_fridge(fridge_file)
+		print "===FRIDGE ITEMS==="
+		for item in self.fridge: 
+			print item
+		# load recipes...
 		self.build_recipes(recipe_file)
+		print "============"
+		print
+		print "===RECIPES FOUND==="
+		for recipe in self.recipes:
+			print "Recipe: {}".format(recipe.name)
+			for item in recipe.ingredients:
+				print "\t-- ", item
+		# combine the two to get the best recipe...
+		print "============="
+		print
 		# recalculate today's recipe...
 		self.todays_recipe()
+
+	def to_json(self):
+		"""
+			This function will build a dictionary for use when
+			passing the data over AJAX back to the web front-end.
+			This will format the data to make it a little easier
+			for the front end to deal with...
+		"""
+		def item_string(item):
+			return "{} {} {}".format(item.amount, item.type, item.name)
+		def expiry_string(off_date):
+			time = (off_date - datetime.date.today()).days
+			if time == 1:
+				return "1 day left"
+			else:
+				return "{} days left".format(time)
+		try:
+			output = {}
+			output['fridge'] = [{
+								'ingredient':item_string(item), 
+								'expiry':expiry_string(item.expiry)
+								} for item in self.fridge]
+			output['recipes'] = [{
+								'name':self.todays.name, 
+								'ingredients': [item_string(item) for item in self.todays.ingredients] 
+								}]
+		except Exception as e:
+			print e
+			raise
+		return output
 
 	def build_fridge(self, filename=None):
 		"""
