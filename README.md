@@ -23,11 +23,11 @@ possible based on the food in the fridge.
 
 Brief list of the classes:
 
-FoodType: 		-- Enum type for food items, describes the units
-FoodItem: 		-- Data structure for a food item. Contains amount, type, unit and expiry
-FoodList: 		-- List of food items and useful functions
-RecipeItem: 	-- Structure for recipes, contains a name and a FoodList
-RecipeBuilder:	-- Contains current fridge and recipes, and functions to sort and search 
+* FoodType: 		-- Enum type for food items, describes the units
+* FoodItem: 		-- Data structure for a food item. Contains amount, type, unit and expiry
+* FoodList: 		-- List of food items and useful functions
+* RecipeItem: 	-- Structure for recipes, contains a name and a FoodList
+* RecipeBuilder:	-- Contains current fridge and recipes, and functions to sort and search 
 
 File structures:
 
@@ -38,6 +38,7 @@ format expected in the CSV file is: [name],[amount],[type],[date]. e.g.
 
 The recipe file is assumed to be a JSON string containing recipe objects 
 with a name and a list of ingredients. e.g.
+
 			[ {
 			  "name": "grilled cheese on toast",
 			  "ingredients": [
@@ -51,3 +52,4 @@ with a name and a list of ingredients. e.g.
 			   { "item":"mixed salad", "amount":"100", "unit":"grams"}
 			  ]
 			} ]
+
