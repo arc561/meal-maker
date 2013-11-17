@@ -48,6 +48,8 @@ h1 {
 	float:left;
 	width:330px;
 	padding:20px;
+	border-right-style: dashed;
+	border-width: 1px;
 }
 #fridge li {
 	width: 100%;
@@ -64,12 +66,23 @@ h2 {
 	font-family: 'Montserrat Alternates', sans-serif;
 	font-weight: normal;
 }
+.button {
+	display: inline-block;
+	color: white;
+	border-radius: 50%;
+	background-color: #aaa;
+	width: 27px;
+	height: 27px;
+	margin-left: 20px;
+	cursor: pointer;
+}
+.button:hover {
+	background-color: #ccc;
+}
 #recipes {
 	float:right;
 	width:330px;
 	padding:20px;
-	border-left-style: dashed;
-	border-width: 1px;
 }
 #footer {
 	clear:both;

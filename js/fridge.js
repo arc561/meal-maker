@@ -24,8 +24,63 @@ recipeObj = {
 	 **/
 	init: function() {
 		this.recipeDiv = $('#recipe-list');
-		this.fridgeDiv = $('#fridge-list')
+		this.fridgeDiv = $('#fridge-list');
+
+		this.initFridgeUpload();
+		this.initRecipeUpload();
 		this.clearRecipes();
+	},
+	initFridgeUpload: function() {
+		// sub out the fridge upload button...
+		$('#fridge-button').click(function(e) {
+			e.preventDefault();
+			$('#fridge-upload').click();
+		});
+		$('#fridge-upload').change(function(e) {
+			// build a form data object to send to the server...
+			var data = new FormData();
+			data.append('fridge-upload', $('#fridge-upload')[0].files[0]);
+			recipeObj.refreshFromPost(data);
+			// reset the surrounding form...
+			$(':input','#fridge-form').val('');
+		});
+	},
+	initRecipeUpload: function() {
+		// sub out the recipe upload button...
+		$('#recipe-button').click(function(e){
+			e.preventDefault();
+			$('#recipe-upload').click();
+		});
+		$('#recipe-upload').change(function(e){
+			// build a form data object to send to the server...
+			var data = new FormData();
+			data.append('recipe-upload', $('#recipe-upload')[0].files[0]);
+			recipeObj.refreshFromPost(data);
+			// reset the surrounding form...
+			$(':input','#recipe-form').val('');
+		});
+	},
+	refreshFromPost: function(data) {
+		$.ajax({
+			data: data,
+			cache: false,
+			contentType: false,
+			processData: false,
+			type: 'POST',
+			success: function(data){
+				recipeObj.displayFood(data);	
+			},
+			failure: function(d) {
+				console.log('FAILURE');
+				console.log(d);
+				alert("Request to server failed...","#f66");
+			},
+			error: function(ts) {
+				console.log('ERROR');
+				console.log(ts);
+				alert("Request to server failed...","#f66");		
+			}
+		});
 	},
 	clearRecipes: function() {		
 		/**
@@ -68,12 +123,16 @@ recipeObj = {
 		 **/
 		var content = "";
 		content += "<ul>";
-		fridgeJSON.forEach(function(item){
-			content += "<li>";
-			content += item.ingredient;
-			content += "<span class='expiry'>" + item.expiry + "</span>";
-			content += "</li>";
-		});
+		if (fridgeJSON.length === 0) {
+			content += "No Food"
+		} else {
+			fridgeJSON.forEach(function(item){
+				content += "<li>";
+				content += item.ingredient;
+				content += "<span class='expiry'>" + item.expiry + "</span>";
+				content += "</li>";
+			});
+		}
 		content += "</ul>";
 		this.fridgeDiv.append(content);
 	},

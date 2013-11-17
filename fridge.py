@@ -230,7 +230,7 @@ class RecipeBuilder(object):
 			raise
 		return output
 
-	def build_fridge(self, filename=None):
+	def build_fridge(self, filename=None, clear=True):
 		"""
 			Here we construct the fridge object 
 			from a well-formed csv file. If the line
@@ -240,6 +240,8 @@ class RecipeBuilder(object):
 
 			cheese,10,slices,26/12/2014
 		"""
+		if clear:
+			self.fridge = FoodList()
 		# load up the fridge...
 		try:
 			f = open(filename, 'rb')
@@ -252,7 +254,7 @@ class RecipeBuilder(object):
 			print e
 		return self.fridge
 
-	def build_recipes(self, filename):
+	def build_recipes(self, filename=None, clear=True):
 		""" 
 			Here we expect a file with JSON containing
 			recipe objects with a name and a list of 
@@ -272,6 +274,8 @@ class RecipeBuilder(object):
 			  ]
 			} ]
 		"""
+		if clear:
+			self.recipes = []
 		# load up recipes from a file...
 		try:
 			# Here we open the file and assume we have a 

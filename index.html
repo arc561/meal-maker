@@ -3,7 +3,7 @@
 	<script src="js/fridge.js"></script>
 	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 	<link href='http://fonts.googleapis.com/css?family=Sacramento' rel='stylesheet' type='text/css'>
-<link href='http://fonts.googleapis.com/css?family=Quicksand|Montserrat+Alternates:400,700' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Quicksand|Montserrat+Alternates:400,700' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
 <body>
@@ -12,18 +12,30 @@
 
 	<div id="lists">
 		<div id="fridge">
-			<h2>Fridge</h2>
+			<h2>Fridge<div id="fridge-button" class="button">+</div></h2>
 			<div id="fridge-list">
 			</div>
 		</div>
 		<div id="recipes">
-			<h2>Recipes</h2>
+			<h2>Recipes<div id="recipe-button" class="button">+</div></h2>
 			<div id="recipe-list">
 			</div>
 		</div>
 		<div id="footer">
 			<p>Copyright &#169 2013</p>
 		</div>
+	</div>
+	<div id="fridge-form" style="display:none">
+		<form method='POST' enctype='multipart/form-data'>
+			<input id="fridge-upload" type="file" name="fridge-upload">
+			<input id="fridge-submit" type="submit">
+		</form>
+	</div>
+	<div id="recipe-form" style="display:none">
+		<form method='POST' enctype='multipart/form-data'>
+			<input id="recipe-upload" type="file" name="recipe-upload">
+			<input id="recipe-submit" type="submit">
+		</form>
 	</div>
 </body>
 </html>

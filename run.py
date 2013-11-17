@@ -18,9 +18,16 @@
 import fridge
 import argparse
 import json
+import cgi
 import BaseHTTPServer
 import SimpleHTTPServer
 import SocketServer
+
+"""
+	Global object for recipe builder. This allows the handler to 
+	access the RecipeBuilder without multiple initializations...
+"""
+rb = fridge.RecipeBuilder()
 
 class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	"""
@@ -30,46 +37,94 @@ class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		for the front page...
 	"""
 	def __init__(self, *arg, **kwargs):
-		self.rb = fridge.RecipeBuilder()
-		self.rb.build_all(args.fridge, args.recipes)
+		# constants...
 		self.DATA_FILENAME = 'data.json'
+		self.FRIDGE_FILE = 'data/fridge.csv'
+		self.RECIPE_FILE = 'data/recipe.json'
 		SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, *arg, **kwargs)
 
 	def do_GET(self):
+		"""
+			Simple Get response handler. Here we build up a new food list when
+			the web ajax request asks for a new recipe/fridge list...
+		"""
 		if self.DATA_FILENAME in self.path:
-			try:
-				foodJSON = self.rb.to_json()
-				mime_t, reply = "application/json", json.dumps(foodJSON)
-			except Exception as e:
-				print e
-				self.response(500)
-				print >> self.wfile, 'Function process_query failed:', e
-				return
-			self.response(200, mime_t)
-			print reply
-			self.wfile.write(reply)
+			self.food_response()
 		else:
 			return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
+	def do_POST(self):
+		"""
+			The post handler will store the file in FRIDGE_FILE and RECIPE_FILE,
+			and then recalculate the meal. The data will come in as a formData request
+			and will be passed back as the standard json response...
+		"""
+		try:
+			# first parse the headers to look for the form...
+			ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+			print ctype
+			if ctype == 'multipart/form-data':
+				query=cgi.parse_multipart(self.rfile, pdict)
+			print query
+			# look for the data type and attempt to load the file...
+			if query.has_key('fridge-upload'):
+				# load the fridge data...
+				upfilecontent = query.get('fridge-upload')
+				self.prepare_content(self.FRIDGE_FILE, upfilecontent[0], rb.build_fridge)
+			elif query.has_key('recipe-upload'):
+				# load the recipe file...
+				upfilecontent = query.get('recipe-upload')
+				self.prepare_content(self.RECIPE_FILE, upfilecontent[0], rb.build_recipes)
+		except Exception as e:
+			print e
+			self.response(500)
+			print >> self.wfile, 'Post request failed:', e
+			return
+
+	def prepare_content(self, filename, filedata, fn):
+		"""
+			This function loads the file from the web front end and
+			saves it. Response is then constructed
+		"""			
+		try:
+			f = open(filename, 'wb')
+			f.write(filedata)
+			f.close()
+		except:
+			raise Exception('Failed to open storage file.')
+		try:
+			fn(filename)
+			rb.todays_recipe()
+		except Exception as e:
+			print e
+			raise Exception('Failed to rebuild recipe')
+		self.food_response()
+
+	def food_response(self, code=200):
+		"""
+			Here we build the http response for the server...
+		"""
+		try:
+			foodJSON = rb.to_json()
+			mime_t, reply = "application/json", json.dumps(foodJSON)
+		except Exception as e:
+			print e
+			self.response(500)
+			print >> self.wfile, 'Get request failed:', e
+			return
+		self.response(code, mime_t)
+		print reply
+		self.wfile.write(reply)
+
 	def response(self, code, mime_t="default"):
+		"""
+			writes the header...
+		"""
 		self.send_response(code)
 		if mime_t == "default":
 			mime_t = "text/html"
 		self.send_header('Content-Type', mime_t)
 		self.end_headers()
-
-def start_server(host, port, threaded=True):
-	"""
-		This function will start the server. In this
-		case it will server forever and block...
-
-	"""	
-	# first open the HTTP to handle JSON requests...
-	s = SocketServer.ThreadingTCPServer((host, port), Handler)
-	if not s:
-		return (True, None)
-	s.serve_forever()
-	return (False, t)
 
 def main():
 	"""
@@ -78,19 +133,21 @@ def main():
 		The host argument is used to determine which has been requested 
 		from the user.
 	"""
+	# construct the initial object...
+	rb.build_all(args.fridge, args.recipes)
+	# now we split based on the host or simple command line app...
 	if args.host:
 		# This is the server option. Here the results can be viewed on the
 		# host:port specified at the cmd line...
 		print('Attempting to open socket at {}:{}'.format(args.host, args.port))
-		(err,server_thread) = start_server(args.host, args.port)
-		if err:
+		# first open the HTTP to handle JSON requests and serve forever...
+		s = SocketServer.ThreadingTCPServer((args.host, args.port), Handler)
+		if not s:
 			print "Failed to initialize server."
 			return
+		else:
+			s.serve_forever()
 	else:
-		# This is just the standard cmd line 
-		rb = fridge.RecipeBuilder()
-		# construct the initial object...
-		rb.build_all(args.fridge, args.recipes)
 		# grab today's recipe...
 		recipe = rb.todays
 		if recipe:
