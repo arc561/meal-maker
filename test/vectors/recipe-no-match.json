@@ -2,7 +2,7 @@
   "name": "grilled mushrooms on toast",
   "ingredients": [
    { "item":"bread", "amount":"2", "unit":"slices"},
-   { "item":"mushrooms", "amount":"2", "unit":"of"}
+   { "item":"mushrooms", "amount":"20", "unit":"of"}
   ]
 } , {
   "name": "garlic snails",

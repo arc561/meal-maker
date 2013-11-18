@@ -149,12 +149,7 @@ def main():
 			s.serve_forever()
 	else:
 		# grab today's recipe...
-		recipe = rb.todays
-		if recipe:
-			print "Optimal recipe is:"
-			print recipe.name
-		else:
-			print "Order Takeout"
+		rb.print_debug_info()
 
 if __name__ == "__main__":
 	"""

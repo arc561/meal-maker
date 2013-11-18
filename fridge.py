@@ -43,6 +43,8 @@ import csv
 import json
 import datetime
 import itertools
+import os
+import unittest
 
 # enum of food types...
 class FoodType:
@@ -76,6 +78,11 @@ class FoodItem(object):
 			return "{} {} {}, expires {}".format(self.amount, self.type, self.name, self.expiry)
 		else:
 			return "{} {} {}".format(self.amount, self.type, self.name)
+	def __eq__(self, other):
+		return 	(self.amount == other.amount) and \
+				(self.type == other.type) and \
+				(self.name == other.name) and \
+				(self.expiry == other.expiry) \
 
 class FoodList(object):
 	"""
@@ -88,6 +95,18 @@ class FoodList(object):
 	def __iter__(self):
 		return iter(self.items)
 
+	def __getitem__(self, key):
+		return self.items[key]
+
+	def __eq__(self, other):
+		if isinstance(other, FoodList):
+			return self.items == other.items
+		else:
+			return False
+
+	def __len__(self):
+		return len(self.items)
+
 	def build_fridge_item(self, name, amt, food_type, expiry=None):
 		"""
 			This function is used to pull in string arguments,
@@ -97,14 +116,23 @@ class FoodList(object):
 		"""
 		try:
 			fridge_item = FoodItem()
+			# grab the name, no empty strings...
 			fridge_item.name = name.strip()
+			if not fridge_item.name:
+				raise
+			# grab the item type, must be of FoodType...
 			fridge_item.type = FoodType.build(food_type.strip())
+			# grab numbers, must be positive
 			fridge_item.amount = int(amt)
+			if fridge_item.amount <= 0:
+				raise
+			# expiry not compulsory, but must be in format DD/MM/YYYY
 			if expiry:
 				expiry = expiry.strip()
 				# split date string into reversed ISO date format args...
 				dates = map(int, reversed(expiry.split('/')))
 				fridge_item.expiry = datetime.date(*dates)
+			# add the item to the fridge...
 			self.items.append(fridge_item)
 		except Exception as e:
 			# fail, but not catastrophic...
@@ -116,7 +144,8 @@ class FoodList(object):
 			Firstly groupby needs names in contiguous positions...
 		"""
 		food = sorted(food, key=lambda x: x.name)
-		grouped_list = itertools.groupby(food, key=lambda x: x.name)
+		# we group by name, but not by type...
+		grouped_list = itertools.groupby(food, key=lambda x: x.name + x.type)
 		all_list = FoodList()
 		for key, x in grouped_list:
 			same_foods = list(x)
@@ -146,9 +175,11 @@ class RecipeItem(object):
 		The FoodList in this case will not contain relevant
 		expiry data...
 	"""
-	def __init__(self, name='', ingredients=FoodList()):
+	def __init__(self, name='Order Takeout', ingredients=FoodList()):
 		self.name = name
 		self.ingredients = ingredients
+	def __eq__(self, other):
+		return (self.name == other.name) and (self.ingredients == other.ingredients)
 
 class RecipeBuilder(object):
 	"""
@@ -164,7 +195,7 @@ class RecipeBuilder(object):
 		# list of RecipeItems...
 		self.recipes = []
 		# calculated RecipeItem()
-		self.todays = None
+		self.todays = RecipeItem()
 
 	def build_all(self, fridge_file, recipe_file):
 		""" 
@@ -174,12 +205,15 @@ class RecipeBuilder(object):
 		"""
 		# load fridge...
 		self.build_fridge(fridge_file)
+		# load recipes...
+		self.build_recipes(recipe_file)
+		# recalculate today's recipe...
+		self.todays_recipe()
+
+	def print_debug_info(self):
 		print "===FRIDGE ITEMS==="
 		for item in self.fridge: 
 			print item
-		# load recipes...
-		self.build_recipes(recipe_file)
-		print "============"
 		print
 		print "===RECIPES FOUND==="
 		for recipe in self.recipes:
@@ -187,10 +221,10 @@ class RecipeBuilder(object):
 			for item in recipe.ingredients:
 				print "\t-- ", item
 		# combine the two to get the best recipe...
-		print "============="
 		print
-		# recalculate today's recipe...
-		self.todays_recipe()
+		if self.todays:
+			print "Optimal recipe is:"
+			print self.todays.name
 
 	def to_json(self):
 		"""
@@ -273,6 +307,9 @@ class RecipeBuilder(object):
 			   { "item":"mixed salad", "amount":"100", "unit":"grams"}
 			  ]
 			} ]
+
+			The clear argument decides whether to clear the
+			existing contents of the recipe book or not...
 		"""
 		if clear:
 			self.recipes = []
@@ -303,8 +340,8 @@ class RecipeBuilder(object):
 	def _get_cooking_date(self, ingredients, food_list):
 		"""
 			Given a set of ingredients and a food_list, 
-			returns is_possible and the youngest date, or 
-			None if not possible...
+			returns the youngest date, or None if no recipe
+			is possible...
 		"""
 		dates = []
 		found = False
@@ -352,10 +389,194 @@ class RecipeBuilder(object):
 			if date:
 				recipe_list.append((date, item))
 		# now we have all the recipes, so we can find the nearest...
-		self.todays = None
+		self.todays = RecipeItem()
 		if recipe_list:
 			# find the minimum based on the date...
 			recipe_obj = min(recipe_list, key=lambda x: x[0])
 			# now return the full recipe...
 			self.todays = recipe_obj[1]
 		return self.todays
+
+"""
+===============
+
+ UNIT TESTS for the fridge classes...
+
+===============
+"""
+
+class TestFoodList(unittest.TestCase):
+	"""
+		Unit tests for the food list class.
+	"""
+	def setUp(self):
+		self.t = FoodList()
+	def test_build_fridge_item(self):
+		# first check that items are added correctly...
+		self.t.items = []
+		self.t.build_fridge_item('pickles', 2, 'of', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'grams', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'ml', '24/12/2012')
+		self.t.build_fridge_item('pickles', 2, 'slices', '24/12/2012')
+		# build the comparison objects...
+		food_items = [None for x in xrange(4)]
+		food_items[0] = FoodItem(2, 'of', 'pickles', datetime.date(2012, 12, 24))
+		food_items[1] = FoodItem(20, 'grams', 'pickles', datetime.date(2012, 12, 24))
+		food_items[2] = FoodItem(20, 'ml', 'pickles', datetime.date(2012, 12, 24))
+		food_items[3] = FoodItem(2, 'slices', 'pickles', datetime.date(2012, 12, 24))
+		# check that they're equal...
+		self.assertEqual(self.t.items[0], food_items[0])
+		self.assertEqual(self.t.items[1], food_items[1])
+		self.assertEqual(self.t.items[2], food_items[2])
+		self.assertEqual(self.t.items[3], food_items[3])
+		# next check that illegal types are not added, and no error occurs...
+		self.t.items = []
+		self.t.build_fridge_item('pickles', 2, 'blocks', '24/12/2012')
+		self.assertEqual(self.t.items, [])
+		self.t.build_fridge_item('pickles', -2, 'blocks', '24/12/2012')
+		self.assertEqual(self.t.items, [])
+		self.t.build_fridge_item('pickles', 2, 'blocks', 'junk')
+		self.assertEqual(self.t.items, [])
+		self.t.build_fridge_item('', 2, 'blocks', '24/12/2012')
+		self.assertEqual(self.t.items, [])
+	def test_compact_food_list(self):
+		# first check make sure the list can be compacted...
+		self.t.items = []
+		self.t.build_fridge_item('pickles', 2, 'of', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'grams', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'ml', '24/12/2012')
+		self.t.build_fridge_item('pickles', 2, 'slices', '24/12/2012')
+		compacted = self.t._compact_food_list(self.t.items)
+		self.assertEqual(len(compacted), 4)
+		# next make sure different types cannot be compacted...
+		self.t.items = []
+		self.t.build_fridge_item('pickles', 2, 'of', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'of', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'of', '24/12/2012')
+		self.t.build_fridge_item('pickles', 2, 'of', '24/12/2012')
+		compacted = self.t._compact_food_list(self.t.items)
+		self.assertEqual(len(compacted), 1)
+	def test_todays_food(self):
+		# remove stale food...
+		self.t.items = []
+		self.t.build_fridge_item('pickles', 2, 'of', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'grams', '24/12/2012')
+		self.t.build_fridge_item('pickles', 20, 'ml', '24/12/2012')
+		self.t.build_fridge_item('pickles', 2, 'slices', '24/12/2012')
+		today = self.t.todays_food()
+		self.assertEqual(len(today), 0)
+
+class TestRecipeBuilder(unittest.TestCase):
+	"""
+		UnitTest class for the RecipeBuilder. These can be executed 
+		from the command line with:
+
+		python -m unittest -v -b fridge
+	"""
+	def setUp(self):
+		# constants for testing...
+		self.TEST_DIR = './test/vectors/'
+		self.NO_RECIPE = 'Order Takeout'
+		self.EMPTY_JSON_DICT = {
+								'recipes': [{
+												'ingredients' : [],
+												'name' : self.NO_RECIPE
+											}], 
+								'fridge': []
+								}
+		self.rb = RecipeBuilder()
+		# move to the test signals directory 
+		# to simplify filename args...
+		self.cwd = os.getcwd()
+		os.chdir(self.TEST_DIR)
+
+	def tearDown(self):
+		# pop the current working directory...
+		os.chdir(self.cwd)
+
+	def test_init(self):
+		"""
+			Clear the RecipeBuilder, and make sure everything is
+			in empty as expected...
+		"""
+		self.rb = RecipeBuilder()
+		self.assertEqual(self.rb.recipes, [])
+		self.assertEqual(self.rb.fridge, FoodList())
+		self.assertEqual(self.rb.todays, RecipeItem())
+		self.assertEqual(self.rb.to_json(), self.EMPTY_JSON_DICT)
+		self.assertEqual(self.rb.todays.name, self.NO_RECIPE)
+
+	def test_build_recipes(self):
+		self.rb.build_recipes('recipe-default.json')
+		cheese = self.rb.recipes[0]
+		salad = self.rb.recipes[1]
+		# check the cheese...
+		self.assertEqual(cheese.name, 'grilled cheese on toast')
+		self.assertEqual(len(cheese.ingredients), 2)
+		ingredients = map(str, cheese.ingredients)
+		self.assertEqual(ingredients,['2 slices bread', '2 slices cheese'])
+		# check the salad...
+		self.assertEqual(salad.name, 'salad sandwich')
+		self.assertEqual(len(salad.ingredients), 2)
+		ingredients = map(str, salad.ingredients)
+		self.assertEqual(ingredients,['2 slices bread', '100 grams mixed salad'])
+
+	def test_build_fridge(self):
+		self.rb.build_fridge('fridge-default.csv')
+		bread = self.rb.fridge[0]
+		salad = self.rb.fridge[4]
+		# check the elements...
+		self.assertEqual(str(bread), '10 slices bread, expires 2012-12-21')
+		self.assertEqual(str(salad), '10 slices cheese, expires 2014-12-26')
+		self.assertEqual(len(self.rb.fridge), 8)
+
+	def test_to_json(self):		
+		self.rb.build_fridge('fridge-default.csv')
+		# check the cheese...
+		json_obj = self.rb.to_json()
+		self.assertEqual(json_obj['recipes'], self.EMPTY_JSON_DICT['recipes'])
+		self.assertEqual(len(json_obj['fridge']), 8)
+
+	def test_build_all(self):
+		# missing files
+		self.rb.build_all('junk', 'junk')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# default example, output salad sandwich...
+		self.rb.build_all('fridge-default.csv', 'recipe-default.json')
+		self.assertEqual(self.rb.todays.name, 'salad sandwich')
+		# swap salad and cheese expiry should get grilled cheese...
+		self.rb.build_all('fridge-cheese.csv', 'recipe-default.json')
+		self.assertEqual(self.rb.todays.name, 'grilled cheese on toast')
+		# swap args for bad data...
+		self.rb.build_all('recipe-default.json', 'fridge-cheese.csv')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# traditional missing data pieces...
+		self.rb.build_all('fridge-missing.csv', 'recipe-missing.json')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# food in fridge but nothing matches...
+		self.rb.build_all('fridge-no-match.csv', 'recipe-no-match.json')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# stale food matches nothing against any recipe...
+		self.rb.build_all('fridge-stale.csv', 'recipe-stale.json')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# stale on the garlic recipes still fail...
+		self.rb.build_all('fridge-stale.csv', 'recipe-no-match.json')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# ditto the initial recipes...
+		self.rb.build_all('fridge-stale.csv', 'recipe-default.json')
+		self.assertEqual(self.rb.todays.name, 'Order Takeout')
+		# ditto the initial recipes...
+		self.rb.build_all('fridge-garlic-snails.csv', 'recipe-no-match.json')
+		self.assertEqual(self.rb.todays.name, 'garlic snails')
+
+if __name__ == "__main__":
+	"""
+		To run the unit tests enter the following at the cmd line:
+
+		python fridge.py
+
+		Alternatively, run:
+
+		python -m unittest -v -b fridge
+	"""
+	unittest.main(verbosity=2, buffer=True)
