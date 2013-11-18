@@ -17,7 +17,7 @@ The application can also be run with a simple web display. In this case the Pyth
 code will launch a SimpleHTTPServer and the recipes and fridge contents can be viewed
 through a browser.
 
-> python run.py --fridge test/default/fridge.csv --recipes test/default/recipe.json --host localhost --port 8000
+> python run.py --fridge test/vectors/fridge.csv --recipes test/vectors/recipe.json --host localhost --port 8000
 
 The above will serve the html page over localhost. Opening localhost:8000 in the browser
 will show the current recipe selection. Note that through the web interface it is also possible
