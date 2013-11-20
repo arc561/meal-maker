@@ -11,16 +11,21 @@ Running
 -------
 To run the application, simply specify the csv and json file at the command line:
 
-> python run.py --fridge test/default/fridge.csv --recipes test/default/recipe.json
+> python run.py --fridge test/vectors/fridge-default.csv --recipes test/vectors/recipe-default.json
 
 The application can also be run with a simple web display. In this case the Python
 code will launch a SimpleHTTPServer and the recipes and fridge contents can be viewed
 through a browser.
 
-> python run.py --fridge test/default/fridge.csv --recipes test/default/recipe.json --host localhost --port 8000
+> python run.py --fridge test/vectors/fridge.csv --recipes test/vectors/recipe.json --host localhost --port 8000
 
 The above will serve the html page over localhost. Opening localhost:8000 in the browser
-will show the current recipe selection.
+will show the current recipe selection. Note that through the web interface it is also possible
+to add new fridge.csv and recipe.json files through (+) buttons on the page.
+
+To run all the unit tests on the application, run:
+
+> python fridge.py
 
 fridge.py
 ---------
